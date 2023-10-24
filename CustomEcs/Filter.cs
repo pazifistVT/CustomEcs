@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,13 +10,24 @@ namespace CustomEcs
     public abstract class BaseFilter
     {
         public abstract void UpdateFilter();
+        public MainClass mainClass;
     }
-    public class Filter<T> : BaseFilter  where T : struct
+    public class Filter<T> : BaseFilter where T : struct
     {
-        static int HashType = Component<T>.GetInstanceComponent().HashType;
+        private static Filter<T> filter;
+        private static readonly int HashType = Component<T>.GetInstanceComponent().HashType;
 
-        MainClass mainClass;
+        
         public List<int> FilteredEntities { get; private set; }
+
+        public Filter<T> GetFilter()
+        {
+            if (filter == null)
+            {
+                filter = new Filter<T>();
+            }
+            return filter;
+        }
 
         public override void UpdateFilter()
         {
