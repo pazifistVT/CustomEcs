@@ -2,22 +2,23 @@
 
 namespace CustomEcs
 {
-    class Component<T> : BaseComponent where T : struct
+    internal class Component<T> : BaseComponent where T : struct
     {
         static int defaultSizeBuffer = 32;
         static Component<T> obj;
 
-        public static Component<T> GetInstanceComponent(ComponentContainer componentContainer)
+        public static Component<T> GetInstanceComponent()
         {
             if (obj == null)
             {
                 obj = new Component<T>();
                 obj.components = new T[defaultSizeBuffer];
                 obj.aliveComponents = new bool[defaultSizeBuffer];
-                obj.indexesEmpty = new int[defaultSizeBuffer];
+                obj.indexesEntity = new int[defaultSizeBuffer];
 
                 obj.HashType = obj.GetType().GetHashCode();
 
+                ComponentContainer componentContainer = ComponentContainer.GetInstance();
                 if (!componentContainer.CheckClass(obj.HashType))
                 {
                     componentContainer.AddComponentClass(obj);
@@ -31,27 +32,22 @@ namespace CustomEcs
             }
         }
 
-        public static Component<T> GetInstanceComponent()
-        {
-            return obj;
-        }
-
         T[] components;
         bool[] aliveComponents;
-        int[] indexesEmpty;
-        public ref T CreateNewComponent(int index, int entityIndex)
+        int[] indexesEntity;
+        internal ref T CreateNewComponent(int index, int entityIndex)
         {
             components[index] = new T();
             aliveComponents[index] = true;
-            indexesEmpty[index] = entityIndex;
+            indexesEntity[index] = entityIndex;
             return ref components[index];
         }
 
-        public ref T GetComponent(in int index, int entityIndex)
+        internal ref T GetComponent(in int index, int entityIndex)
         {
             if (aliveComponents[index])
             {
-                indexesEmpty[index] = entityIndex;
+                indexesEntity[index] = entityIndex;
                 return ref components[index];
             }
             else
@@ -60,13 +56,14 @@ namespace CustomEcs
             }
         }
 
-        public ref T AddComponent(out int indexNewComponent, int entityIndex)
+        internal ref T AddComponent(out int indexNewComponent, int entityIndex)
         {
             indexNewComponent = aliveComponents.Length;
             for (int i = 0; i < aliveComponents.Length; i++)
             {
                 if (!aliveComponents[i])
                 {
+                    indexNewComponent = i;
                     return ref CreateNewComponent(i, entityIndex);
                 }
             }
@@ -75,7 +72,7 @@ namespace CustomEcs
             return ref CreateNewComponent(indexNewComponent, entityIndex);
         }
 
-        public void DeleteComponent(in int index)
+        internal void DeleteComponent(in int index)
         {
             aliveComponents[index] = false;
         }

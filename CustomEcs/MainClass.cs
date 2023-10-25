@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CustomEcs
 {
@@ -17,7 +14,7 @@ namespace CustomEcs
         public MainClass()
         {
             entities = new Entity[defaultBufferSize];
-            container = ComponentContainer.GetInstance();
+            container = ComponentContainer.GetInstance(this);
             systems = new List<ISystem>();
         }
 
@@ -44,12 +41,18 @@ namespace CustomEcs
         public void RegistrationSystem(ISystem system)
         {
             systems.Add(system);
-            List<BaseFilter> filtersThisSystem = system.Initialization(this);
+            List<BaseFilter> filtersThisSystem = system.Initialization();
             system.Filters = filtersThisSystem.ToArray();
+            system.MainClass = this;
             foreach (BaseFilter filter in system.Filters)
             {
                 filter.mainClass = this;
             }
+        }
+
+        public void Initialization()
+        {
+
         }
 
         public void Update()
@@ -62,6 +65,11 @@ namespace CustomEcs
                 }
                 item.Update();
             }
+        }
+
+        internal Entity GetEntity(in int index)
+        {
+            return entities[index];
         }
     }
 }

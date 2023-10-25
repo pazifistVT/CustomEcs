@@ -1,30 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 namespace CustomEcs
 {
     abstract class BaseComponent
     {
         public int HashType { get; set; }
-
     }
 
-    class ComponentContainer
+    internal class ComponentContainer
     {
         private static ComponentContainer container;
 
+        private MainClass mainClass;
+
         List<BaseComponent> componentsClass = new List<BaseComponent>();
 
-        private ComponentContainer()
+        private ComponentContainer(MainClass mainClass)
         {
+            this.mainClass = mainClass;
+        }
 
+        public static ComponentContainer GetInstance(MainClass mainClass)
+        {
+            if (container == null)
+            {
+                container = new ComponentContainer(mainClass);
+            }
+            return container;
         }
 
         public static ComponentContainer GetInstance()
         {
-            if (container == null)
-            {
-                container = new ComponentContainer();
-            }
             return container;
         }
 

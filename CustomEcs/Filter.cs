@@ -1,26 +1,20 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace CustomEcs
 {
     public abstract class BaseFilter
     {
-        public abstract void UpdateFilter();
-        public MainClass mainClass;
+        internal abstract void UpdateFilter();
+        internal MainClass mainClass;
     }
     public class Filter<T> : BaseFilter where T : struct
     {
-        private static Filter<T> filter;
+        static Filter<T> filter;
         private static readonly int HashType = Component<T>.GetInstanceComponent().HashType;
-
         
         public List<int> FilteredEntities { get; private set; }
 
-        public Filter<T> GetFilter()
+        public static Filter<T> GetFilter()
         {
             if (filter == null)
             {
@@ -29,8 +23,9 @@ namespace CustomEcs
             return filter;
         }
 
-        public override void UpdateFilter()
+        internal override void UpdateFilter()
         {
+
             FilteredEntities = new List<int>();
 
             for (int i = 0; i < mainClass.entities.Length; i++)

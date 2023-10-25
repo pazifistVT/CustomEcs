@@ -13,14 +13,22 @@ namespace CustomEcs
         public Entity(int indexEntity)
         {
             IndexesComponents = new int[defaultSizeBuffer * 2];
+            for (int i = 0; i < IndexesComponents.Length; i++)
+            {
+                IndexesComponents[i] = -1;
+            }
             IsAlive = true;
             container = ComponentContainer.GetInstance();
             this.IndexEntity = indexEntity;
         }
 
-        public Entity ActivateEntity(int indexEntity)
+        internal Entity ActivateEntity(int indexEntity)
         {
             IndexesComponents = new int[defaultSizeBuffer * 2];
+            for (int i = 0; i < IndexesComponents.Length; i++)
+            {
+                IndexesComponents[i] = -1;
+            }
             IsAlive = true;
             this.IndexEntity = indexEntity;
             return this;
@@ -33,7 +41,7 @@ namespace CustomEcs
 
         public ref T AddOrGetComponent<T>() where T : struct
         {
-            Component<T> componentClass = Component<T>.GetInstanceComponent(container);
+            Component<T> componentClass = Component<T>.GetInstanceComponent();
             int HashType = componentClass.HashType;
             int indexNewComponents = -1;
             for (int i = 0; i < IndexesComponents.Length; i += 2)
@@ -59,14 +67,14 @@ namespace CustomEcs
                 int index = IndexesComponents.Length;
                 Array.Resize(ref IndexesComponents, IndexesComponents.Length * 2);
                 int indexComponents = index + 1;
-                IndexesComponents[indexNewComponents] = HashType;
+                IndexesComponents[index] = HashType;
                 return ref componentClass.AddComponent(out IndexesComponents[indexComponents], IndexEntity);
             }
         }
 
         public void DeleteComponent<T>() where T : struct
         {
-            Component<T> componentClass = Component<T>.GetInstanceComponent(container);
+            Component<T> componentClass = Component<T>.GetInstanceComponent();
             int HashType = componentClass.HashType;
             for (int i = 0; i < IndexesComponents.Length; i += 2)
             {
