@@ -3,42 +3,52 @@ using System.Collections.Generic;
 
 namespace CustomEcs
 {
-    public class MainClass
+    public class MainClassECS
     {
-        static int defaultBufferSize = 8;
+        static readonly int defaultBufferSize = 8;
 
+        internal int lastCreatedEntity;
+        internal int lastDeletedEntity;
         internal Entity[] entities;
-        internal List<ISystem> systems;
+        internal List<SystemECS> systems;
         readonly ComponentContainer container;
 
-        public MainClass()
+        public MainClassECS()
         {
             entities = new Entity[defaultBufferSize];
             container = ComponentContainer.GetInstance(this);
-            systems = new List<ISystem>();
+            systems = new List<SystemECS>();
+            lastCreatedEntity = 0;
         }
 
         public Entity CreateEntity()
         {
-            for (int i = 0; i < entities.Length; i++)
+            if (entities[lastDeletedEntity] != null && !entities[lastDeletedEntity].IsAlive)
+            {
+                return entities[lastDeletedEntity].ActivateEntity(lastDeletedEntity);
+            }
+            for (int i = (lastCreatedEntity + 1); i < entities.Length; i++)
             {
                 if(entities[i] == null)
                 {
-                    entities[i] = new Entity(i);
+                    entities[i] = new Entity(i, this);
+                    lastCreatedEntity = i;
                     return entities[i];
                 }
                 else if(!entities[i].IsAlive)
                 {
+                    lastCreatedEntity = i;
                     return entities[i].ActivateEntity(i);
                 }
             }
             int index = entities.Length;
             Array.Resize(ref entities, entities.Length * 2);
-            entities[index] = new Entity(index);
+            entities[index] = new Entity(index, this);
+            lastCreatedEntity = index;
             return entities[index];
         }
 
-        public void RegistrationSystem(ISystem system)
+        public void RegistrationSystem(SystemECS system)
         {
             systems.Add(system);
             List<BaseFilter> filtersThisSystem = system.Initialization();
@@ -57,7 +67,7 @@ namespace CustomEcs
 
         public void Update()
         {
-            foreach (ISystem item in systems)
+            foreach (SystemECS item in systems)
             {
                 foreach (BaseFilter filter in item.Filters)
                 {

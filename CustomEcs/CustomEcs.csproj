@@ -42,7 +42,7 @@
     <Compile Include="Component.cs" />
     <Compile Include="ComponentContainer.cs" />
     <Compile Include="Entity.cs" />
-    <Compile Include="MainClass.cs" />
+    <Compile Include="MainClassECS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="System.cs" />
   </ItemGroup>

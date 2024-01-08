@@ -2,11 +2,14 @@
 
 namespace CustomEcs
 {
-    public interface ISystem
+    public abstract class SystemECS
     {
-        public MainClass MainClass { get; set; }
-        public BaseFilter[] Filters { get; set; }
-        public List<BaseFilter> Initialization();
-        public void Update();
+        internal BaseFilter[] Filters { get; set; }
+        public MainClassECS MainClass { get; internal set; }
+
+        public abstract List<BaseFilter> Initialization();
+
+        public abstract void Update();
     }
+
 }
