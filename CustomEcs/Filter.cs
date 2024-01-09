@@ -115,6 +115,16 @@ namespace CustomEcs
         {
             collectionEnumenator.LastIndex = -1;
 
+            /*Component<T> component = Component<T>.GetInstanceComponent();
+
+            for (int i = 0; i < component.indexesEntity.Length; i++)
+            {
+                if (component.aliveComponents[i] == true)
+                {
+                    AddNewElement(component.indexesEntity[i]);
+                }
+            }*/
+
             for (int i = 0; i < mainClass.entities.Length; i++)
             {
                 if (mainClass.entities[i] != null && mainClass.entities[i].IsAlive) 
@@ -138,17 +148,15 @@ namespace CustomEcs
     {
         private static readonly int HashTypeT = Component<T>.GetInstanceComponent().HashType;
         private static readonly int HashTypeU = Component<U>.GetInstanceComponent().HashType;
-        private bool typeT;
         private bool typeU;
 
         private static Filter<T, U> obj;
-        public static Filter<T, U> GetFilter(TypeFilter T_, TypeFilter U_)
+        public static Filter<T, U> GetFilter(TypeFilter U_)
         {
             if (obj == null)
             {
                 obj = new Filter<T, U>
                 {
-                    typeT = (T_ == TypeFilter.inc),
                     typeU = (U_ == TypeFilter.inc),
                     collectionEnumenator = new CollectionEnumenator()
                 };
@@ -161,17 +169,39 @@ namespace CustomEcs
         internal override void UpdateFilter()
         {
             collectionEnumenator.LastIndex = -1;
+            Component<T> component = Component<T>.GetInstanceComponent();
+            if (typeU == true)
+            {
+                for (int i = 0; i < component.indexesEntity.Length; i++)
+                {
+                    if (component.aliveComponents[i] == true && mainClass.entities[component.indexesEntity[i]].CheckComponentType(HashTypeU))
+                    {
+                        AddNewElement(component.indexesEntity[i]);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < component.indexesEntity.Length; i++)
+                {
+                    if (component.aliveComponents[i] == true && (!mainClass.entities[component.indexesEntity[i]].CheckComponentType(HashTypeU)))
+                    {
+                        AddNewElement(component.indexesEntity[i]);
+                    }
+                }
+            }
 
-            for (int i = 0; i < mainClass.entities.Length; i++)
+
+            /*for (int i = 0; i < mainClass.entities.Length; i++)
             {
                 if (mainClass.entities[i] != null && mainClass.entities[i].IsAlive)
                 {
-                    if ((mainClass.entities[i].CheckComponentType(HashTypeT) && typeT) && (mainClass.entities[i].CheckComponentType(HashTypeU) && typeU) )
+                    if ((mainClass.entities[i].CheckComponentType(HashTypeT)) && (mainClass.entities[i].CheckComponentType(HashTypeU) && typeU) )
                     {
                         AddNewElement(mainClass.entities[i].IndexEntity);
                     }
                 }
-            }
+            }*/
         }
 
         //Получение конпонента по индексу его сущности(индекс необходимо брать из контейнера фильтра)
@@ -192,18 +222,16 @@ namespace CustomEcs
         private static readonly int HashTypeT = Component<T>.GetInstanceComponent().HashType;
         private static readonly int HashTypeU = Component<U>.GetInstanceComponent().HashType;
         private static readonly int HashTypeY = Component<Y>.GetInstanceComponent().HashType;
-        private bool typeT;
         private bool typeU;
         private bool typeY;
 
         private static Filter<T, U, Y> obj;
-        public static Filter<T, U, Y> GetFilter(TypeFilter T_, TypeFilter U_, TypeFilter Y_)
+        public static Filter<T, U, Y> GetFilter(TypeFilter U_, TypeFilter Y_)
         {
             if (obj == null)
             {
                 obj = new Filter<T, U, Y>
                 {
-                    typeT = (T_ == TypeFilter.inc),
                     typeU = (U_ == TypeFilter.inc),
                     typeY = (Y_ == TypeFilter.inc),
                     collectionEnumenator = new CollectionEnumenator()
@@ -217,19 +245,44 @@ namespace CustomEcs
         {
             collectionEnumenator.LastIndex = -1;
 
+            Component<T> component = Component<T>.GetInstanceComponent();
 
-            for (int i = 0; i < mainClass.entities.Length; i++)
+            for (int i = 0; i < component.indexesEntity.Length; i++)
+            {
+                if(component.aliveComponents[i] == true)
+                {
+                    if ((typeU && mainClass.entities[component.indexesEntity[i]].CheckComponentType(HashTypeU)) |
+                       (!typeU && !mainClass.entities[component.indexesEntity[i]].CheckComponentType(HashTypeU))) 
+                    {
+                        if ((typeY && mainClass.entities[component.indexesEntity[i]].CheckComponentType(HashTypeY)) |
+                           (!typeY && !mainClass.entities[component.indexesEntity[i]].CheckComponentType(HashTypeY)))
+                        {
+                            AddNewElement(component.indexesEntity[i]);
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+            }
+
+            /*for (int i = 0; i < mainClass.entities.Length; i++)
             {
                 if (mainClass.entities[i] != null && mainClass.entities[i].IsAlive)
                 {
-                    if ((mainClass.entities[i].CheckComponentType(HashTypeT) && typeT) && 
+                    if (mainClass.entities[i].CheckComponentType(HashTypeT) && 
                         (mainClass.entities[i].CheckComponentType(HashTypeU) && typeU) &&
                         (mainClass.entities[i].CheckComponentType(HashTypeY)) && typeY)
                     {
                         AddNewElement(mainClass.entities[i].IndexEntity);
                     }
                 }
-            }
+            }*/
         }
 
         //Получение конпонента по индексу его сущности(индекс необходимо брать из контейнера фильтра)
@@ -258,19 +311,17 @@ namespace CustomEcs
         private static readonly int HashTypeY = Component<Y>.GetInstanceComponent().HashType;
         private static readonly int HashTypeI = Component<I>.GetInstanceComponent().HashType;
 
-        private bool typeT;
         private bool typeU;
         private bool typeY;
         private bool typeI;
 
         private static Filter<T, U, Y, I> obj;
-        public static Filter<T, U, Y, I> GetFilter(TypeFilter T_, TypeFilter U_, TypeFilter Y_, TypeFilter I_)
+        public static Filter<T, U, Y, I> GetFilter(TypeFilter U_, TypeFilter Y_, TypeFilter I_)
         {
             if (obj == null)
             {
                 obj = new Filter<T, U, Y, I>
                 {
-                    typeT = (T_ == TypeFilter.inc),
                     typeU = (U_ == TypeFilter.inc),
                     typeY = (Y_ == TypeFilter.inc),
                     typeI = (I_ == TypeFilter.inc),
@@ -285,8 +336,43 @@ namespace CustomEcs
         {
             collectionEnumenator.LastIndex = -1;
 
+            Component<T> component = Component<T>.GetInstanceComponent();
 
-            for (int i = 0; i < mainClass.entities.Length; i++)
+            for (int i = 0; i < component.indexesEntity.Length; i++)
+            {
+                if (component.aliveComponents[i] == true)
+                {
+                    if ((typeU && mainClass.entities[component.indexesEntity[i]].CheckComponentType(HashTypeU)) |
+                       (!typeU && !mainClass.entities[component.indexesEntity[i]].CheckComponentType(HashTypeU)))
+                    {
+                        if ((typeY && mainClass.entities[component.indexesEntity[i]].CheckComponentType(HashTypeY)) |
+                           (!typeY && !mainClass.entities[component.indexesEntity[i]].CheckComponentType(HashTypeY)))
+                        {
+
+                            if ((typeI && mainClass.entities[component.indexesEntity[i]].CheckComponentType(HashTypeI)) |
+                               (!typeI && !mainClass.entities[component.indexesEntity[i]].CheckComponentType(HashTypeI)))
+                            {
+                                AddNewElement(component.indexesEntity[i]);
+                            }
+                            else
+                            {
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+            }
+
+
+            /*for (int i = 0; i < mainClass.entities.Length; i++)
             {
                 if (mainClass.entities[i] != null && mainClass.entities[i].IsAlive)
                 {
@@ -298,7 +384,7 @@ namespace CustomEcs
                         AddNewElement(mainClass.entities[i].IndexEntity);
                     }
                 }
-            }
+            }*/
         }
 
         //Получение конпонента по индексу его сущности(индекс необходимо брать из контейнера фильтра)

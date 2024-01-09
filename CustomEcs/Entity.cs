@@ -101,9 +101,10 @@ namespace CustomEcs
             {
                 if (IndexesComponents[i] == HashType)
                 {
-                    IndexesComponents[i] = -1;
                     int indexComponents = i + 1;
                     componentClass.DeleteComponent(in IndexesComponents[indexComponents]);
+                    IndexesComponents[indexComponents] = -1;
+                    IndexesComponents[i] = -1;
                 }
                 else if (IndexesComponents[i] >= 0)
                 {

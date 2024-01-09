@@ -7,7 +7,7 @@ namespace CustomEcs
     {
         internal int HashType { get; set; }
 
-        protected bool[] aliveComponents;//признак жизни компонента
+        protected internal bool[] aliveComponents;//признак жизни компонента
         protected internal int[] indexesEntity;//индекс сущности которой принадлежит компонент
         protected internal int lastDeleteComp;//индекс последнего удаленного компонента
         protected internal int lastCreatedComp;//индекс последнего созданного компонента
@@ -100,7 +100,7 @@ namespace CustomEcs
             }
             Array.Resize(ref aliveComponents, aliveComponents.Length * 2);
             Array.Resize(ref components, components.Length * 2);
-            Array.Resize(ref indexesEntity, components.Length * 2);
+            Array.Resize(ref indexesEntity, indexesEntity.Length * 2);
             return ref CreateNewComponent(indexNewComponent, entityIndex);
         }
         
