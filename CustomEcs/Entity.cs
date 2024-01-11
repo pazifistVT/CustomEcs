@@ -9,31 +9,44 @@ namespace CustomEcs
 
         readonly ComponentContainer container;
         readonly MainClassECS mainClass;
-        int[] IndexesComponents;
+        private int[] typesComponents;
+        private int[] indexesComponents;
+        private int firstIndex;//индекс первого существующего компонента
+        private int lastIndex;//индекс последнего существующего компонента
         public bool IsAlive { get; private set; }
         public int IndexEntity { get; private set; }
         internal Entity(int indexEntity, MainClassECS mainClass)
         {
-            IndexesComponents = new int[defaultSizeBuffer * 2];
-            for (int i = 0; i < IndexesComponents.Length; i++)
+            typesComponents = new int[defaultSizeBuffer];
+            indexesComponents = new int[defaultSizeBuffer];
+            for (int i = 0; i < typesComponents.Length; i++)
             {
-                IndexesComponents[i] = -1;
+                typesComponents[i] = -1;
+                indexesComponents[i] = -1;
             }
             IsAlive = true;
             container = ComponentContainer.GetInstance();
             this.IndexEntity = indexEntity;
             this.mainClass = mainClass;
+
+            firstIndex = 0;
+            lastIndex = 0;
         }
 
         internal Entity ActivateEntity(int indexEntity)
         {
             //IndexesComponents = new int[defaultSizeBuffer * 2];
-            for (int i = 0; i < IndexesComponents.Length; i++)
+            for (int i = 0; i < typesComponents.Length; i++)
             {
-                IndexesComponents[i] = -1;
+                typesComponents[i] = -1;
+                indexesComponents[i] = -1;
             }
             IsAlive = true;
             this.IndexEntity = indexEntity;
+
+            firstIndex = 0;
+            lastIndex = 0;
+
             return this;
         }
 
@@ -41,16 +54,17 @@ namespace CustomEcs
         {
             IsAlive = false;
             //Перебираем индексы типов структур и удаляем компоненты
-            for (int i = 0; i < IndexesComponents.Length; i += 2)
+            for (int i = 0; i < typesComponents.Length; i++)
             {
-                if(IndexesComponents[i] >= 0)
+                if(typesComponents[i] >= 0)
                 {
-                    int indexComponents = i + 1;
-                    container.GetComponent(IndexesComponents[i]).DeleteComponent(indexComponents);
+                    container.GetComponent(typesComponents[i]).DeleteComponent(indexesComponents[i]);
                 }
-                
             }
-            mainClass.lastDeletedEntity = IndexEntity;
+            if (IndexEntity < mainClass.firstFreeIndex)
+            {
+                mainClass.firstFreeIndex = IndexEntity;
+            }
         }
 
         public ref T AddOrGetComponent<T>() where T : struct
@@ -60,16 +74,15 @@ namespace CustomEcs
             int indexNewComponents = -1;
 
             //Перебираем индексы типов структур
-            for (int i = 0; i < IndexesComponents.Length; i += 2)
+            for (int i = 0; i < typesComponents.Length; i++)
             {
                 //Если структура уже прикреплена то возвращем ссылку на нее
-                if (IndexesComponents[i] == HashType)
+                if (typesComponents[i] == HashType)
                 {
-                    int indexComponents = i + 1;
-                    return ref componentClass.GetComponent(IndexesComponents[indexComponents], IndexEntity);
+                    return ref componentClass.GetComponent(indexesComponents[i], IndexEntity);
                 }
                 //Находим первый попавшийся свободный индекс
-                if (IndexesComponents[i] == -1 && indexNewComponents == -1)
+                if (typesComponents[i] == -1 && indexNewComponents == -1)
                 {
                     indexNewComponents = i;
                 }
@@ -77,17 +90,37 @@ namespace CustomEcs
             //Если компонент не найден то создаем компонент на месте найденного индекса иначе расширяем контейнер
             if (indexNewComponents >= 0)
             {
-                int indexComponents = indexNewComponents + 1;
-                IndexesComponents[indexNewComponents] = HashType;
-                return ref componentClass.AddComponent(out IndexesComponents[indexComponents], IndexEntity);
+                typesComponents[indexNewComponents] = HashType;
+
+                if(indexNewComponents < firstIndex)
+                {
+                    firstIndex = indexNewComponents;
+                }
+                if (indexNewComponents > lastIndex)
+                {
+                    lastIndex = indexNewComponents;
+                }
+
+                return ref componentClass.AddComponent(out indexesComponents[indexNewComponents], IndexEntity);
             }
             else
             {
-                int index = IndexesComponents.Length;
-                Array.Resize(ref IndexesComponents, IndexesComponents.Length * 2);
-                int indexComponents = index + 1;
-                IndexesComponents[index] = HashType;
-                return ref componentClass.AddComponent(out IndexesComponents[indexComponents], IndexEntity);
+                int index = typesComponents.Length;
+                Array.Resize(ref typesComponents, typesComponents.Length * 2);
+                Array.Resize(ref indexesComponents, indexesComponents.Length * 2);
+                typesComponents[index] = HashType;
+
+                if (index < firstIndex)
+                {
+                    firstIndex = index;
+                }
+                if (index > lastIndex)
+                {
+                    lastIndex = index;
+                }
+
+                return ref componentClass.AddComponent(out indexesComponents[index], IndexEntity);
+
             }
         }
 
@@ -97,16 +130,24 @@ namespace CustomEcs
             Component<T> componentClass = Component<T>.GetInstanceComponent();
             int HashType = componentClass.HashType;
             bool componentsExist = false;
-            for (int i = 0; i < IndexesComponents.Length; i += 2)
+            for (int i = 0; i < typesComponents.Length; i++)
             {
-                if (IndexesComponents[i] == HashType)
+                if (typesComponents[i] == HashType)
                 {
-                    int indexComponents = i + 1;
-                    componentClass.DeleteComponent(in IndexesComponents[indexComponents]);
-                    IndexesComponents[indexComponents] = -1;
-                    IndexesComponents[i] = -1;
+                    componentClass.DeleteComponent(in indexesComponents[i]);
+                    typesComponents[i] = -1;
+                    indexesComponents[i] = -1;
+
+                    if (i == firstIndex && i < (typesComponents.Length - 1))
+                    {
+                        firstIndex++;
+                    }
+                    if (i == lastIndex && i > 0)
+                    {
+                        lastIndex--;
+                    }
                 }
-                else if (IndexesComponents[i] >= 0)
+                else if (typesComponents[i] >= 0)
                 {
                     componentsExist = true;
                 }
@@ -118,9 +159,9 @@ namespace CustomEcs
         //Проверка прикреплены ли к сущности компоненты заданного типа
         internal bool CheckComponentType(int HashType)
         {
-            for (int i = 0; i < IndexesComponents.Length; i += 2)
+            for (int i = firstIndex; i < (lastIndex + 1); i++)
             {
-                if (IndexesComponents[i] == HashType)
+                if (typesComponents[i] == HashType)
                 {
                     return true;
                 }
