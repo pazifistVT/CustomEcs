@@ -7,8 +7,8 @@ namespace CustomEcs
     {
         static readonly int defaultBufferSize = 8;
 
-        internal int lastCreatedEntity;
-        internal int lastDeletedEntity;
+        internal int firstFreeIndex;
+        internal int lastFreeIndex;
         internal Entity[] entities;
         internal List<SystemECS> systems;
         readonly ComponentContainer container;
@@ -18,34 +18,41 @@ namespace CustomEcs
             entities = new Entity[defaultBufferSize];
             container = ComponentContainer.GetInstance(this);
             systems = new List<SystemECS>();
-            lastCreatedEntity = 0;
+            firstFreeIndex = 0;
+            lastFreeIndex = defaultBufferSize;
         }
 
         public Entity CreateEntity()
         {
-            if (entities[lastDeletedEntity] != null && !entities[lastDeletedEntity].IsAlive)
-            {
-                return entities[lastDeletedEntity].ActivateEntity(lastDeletedEntity);
-            }
-            for (int i = (lastCreatedEntity + 1); i < entities.Length; i++)
+            for (int i = firstFreeIndex; i < lastFreeIndex; i++)
             {
                 if(entities[i] == null)
                 {
                     entities[i] = new Entity(i, this);
-                    lastCreatedEntity = i;
+                    CheckIndex(in i);
+
                     return entities[i];
                 }
                 else if(!entities[i].IsAlive)
                 {
-                    lastCreatedEntity = i;
+                    CheckIndex(in i);
                     return entities[i].ActivateEntity(i);
                 }
             }
             int index = entities.Length;
             Array.Resize(ref entities, entities.Length * 2);
             entities[index] = new Entity(index, this);
-            lastCreatedEntity = index;
+            CheckIndex(in index);
+            lastFreeIndex *= 2;
             return entities[index];
+        }
+
+        void CheckIndex(in int i)
+        {
+            if (i == firstFreeIndex)
+            {
+                firstFreeIndex = (i + 1);
+            }
         }
 
         public void RegistrationSystem(SystemECS system)

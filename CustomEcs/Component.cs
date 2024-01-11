@@ -7,18 +7,17 @@ namespace CustomEcs
     {
         internal int HashType { get; set; }
 
-        protected bool[] aliveComponents;//признак жизни компонента
+        protected internal bool[] aliveComponents;//признак жизни компонента
         protected internal int[] indexesEntity;//индекс сущности которой принадлежит компонент
-        protected internal int lastDeleteComp;//индекс последнего удаленного компонента
-        protected internal int lastCreatedComp;//индекс последнего созданного компонента
+        protected internal int firstFreeIndex;
+        protected internal int lastFreeIndex;
         //Удаление структуры по указанному индексу
         internal void DeleteComponent(in int index)
         {
             aliveComponents[index] = false;
-            lastDeleteComp = index;
-            if(lastCreatedComp > lastDeleteComp)
+            if(index < firstFreeIndex)
             {
-                lastCreatedComp = lastDeleteComp;
+                firstFreeIndex = index;
             }
         }
     }
@@ -38,8 +37,8 @@ namespace CustomEcs
                 obj.components = new T[defaultSizeBuffer];
                 obj.aliveComponents = new bool[defaultSizeBuffer];
                 obj.indexesEntity = new int[defaultSizeBuffer];
-                obj.lastDeleteComp = 0;
-                obj.lastCreatedComp = 0;
+                obj.firstFreeIndex = 0;
+                obj.lastFreeIndex = defaultSizeBuffer;
                 obj.HashType = obj.GetType().GetHashCode();
 
                 ComponentContainer componentContainer = ComponentContainer.GetInstance();
@@ -63,7 +62,11 @@ namespace CustomEcs
             components[index] = new T();
             aliveComponents[index] = true;
             indexesEntity[index] = entityIndex;
-            lastCreatedComp = index;
+            if(index == firstFreeIndex)
+            {
+                firstFreeIndex = (index + 1);
+            }
+            
             return ref components[index];
         }
 
@@ -85,14 +88,14 @@ namespace CustomEcs
         {
             indexNewComponent = aliveComponents.Length;
             //Если ранее происходило удаление компонента создаем структуру без перебора массива
-            if (!aliveComponents[lastDeleteComp])
+            /*if (!aliveComponents[lastDeleteComp])
             {
                 indexNewComponent = lastDeleteComp;
                 return ref CreateNewComponent(lastDeleteComp, entityIndex);
-            }
-            for (int i = (lastCreatedComp + 1); i < aliveComponents.Length; i++)
+            }*/
+            for (int i = firstFreeIndex; i < lastFreeIndex; i++)
             {
-                if (!aliveComponents[i])
+                if (aliveComponents[i] == false)
                 {
                     indexNewComponent = i;
                     return ref CreateNewComponent(i, entityIndex);
@@ -100,7 +103,8 @@ namespace CustomEcs
             }
             Array.Resize(ref aliveComponents, aliveComponents.Length * 2);
             Array.Resize(ref components, components.Length * 2);
-            Array.Resize(ref indexesEntity, components.Length * 2);
+            Array.Resize(ref indexesEntity, indexesEntity.Length * 2);
+            lastFreeIndex *= 2;
             return ref CreateNewComponent(indexNewComponent, entityIndex);
         }
         
