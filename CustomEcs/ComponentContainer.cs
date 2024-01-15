@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json;
+using System;
 namespace CustomEcs
 {
 
@@ -9,6 +11,38 @@ namespace CustomEcs
         private MainClassECS mainClass;
 
         List<BaseComponent> componentsClass;
+
+        internal string Serialize()
+        {
+            SerializeListComponents serializeListComponents = new SerializeListComponents();
+            serializeListComponents.list = new List<SerializeComponent>();
+            foreach (BaseComponent item in componentsClass)
+            {
+                SerializeComponent serializeComponent = new SerializeComponent();
+                serializeComponent.componentType = item.HashType;
+                serializeComponent.value = item.Serialize();
+                serializeListComponents.list.Add(serializeComponent);
+            }
+            string s = JsonSerializer.Serialize<SerializeListComponents>(serializeListComponents);
+            return s;
+        }
+
+        internal void Deserialize(string s)
+        {
+            SerializeListComponents entity = new SerializeListComponents();
+            try
+            {
+                entity = JsonSerializer.Deserialize<SerializeListComponents>(s);
+            }
+            catch (Exception e)
+            {
+
+            }
+            foreach (BaseComponent item in componentsClass)
+            {
+                item.Deserialize(entity);
+            }
+        }
 
         private ComponentContainer(MainClassECS mainClass)
         {

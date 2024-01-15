@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Eventing.Reader;
-
+using System.Text.Json;
 namespace CustomEcs
 {
     public class Entity
@@ -15,6 +15,55 @@ namespace CustomEcs
         private int lastIndex;//индекс последнего существующего компонента
         public bool IsAlive { get; private set; }
         public int IndexEntity { get; private set; }
+        private class EntityJson
+        {
+            public int[] typesComponents;
+            public int[] indexesComponents;
+            public int firstIndex;
+            public int lastIndex;
+            public bool IsAlive;
+            public int IndexEntity;
+
+            public EntityJson()
+            {
+
+            }
+        }
+
+        internal string Serialize()
+        {
+            EntityJson entity = new EntityJson()
+            {
+                typesComponents = typesComponents,
+                indexesComponents = indexesComponents,
+                firstIndex = firstIndex,
+                lastIndex = lastIndex,
+                IsAlive = IsAlive,
+                IndexEntity = IndexEntity
+            };
+            string s = JsonSerializer.Serialize<EntityJson>(entity);
+            return s;
+        }
+
+        internal void Deserialize(string s)
+        {
+            EntityJson entity = new EntityJson();
+            try
+            {
+                entity = JsonSerializer.Deserialize<EntityJson>(s);
+            }
+            catch (Exception e)
+            {
+
+            }
+            typesComponents = entity.typesComponents;
+            indexesComponents = entity.indexesComponents;
+            firstIndex = entity.firstIndex;
+            lastIndex = entity.lastIndex;
+            IsAlive = entity.IsAlive;
+            IndexEntity = entity.IndexEntity;
+        }
+
         internal Entity(int indexEntity, MainClassECS mainClass)
         {
             typesComponents = new int[defaultSizeBuffer];
@@ -56,7 +105,7 @@ namespace CustomEcs
             //Перебираем индексы типов структур и удаляем компоненты
             for (int i = 0; i < typesComponents.Length; i++)
             {
-                if(typesComponents[i] >= 0)
+                if (typesComponents[i] >= 0)
                 {
                     container.GetComponent(typesComponents[i]).DeleteComponent(indexesComponents[i]);
                 }
@@ -92,7 +141,7 @@ namespace CustomEcs
             {
                 typesComponents[indexNewComponents] = HashType;
 
-                if(indexNewComponents < firstIndex)
+                if (indexNewComponents < firstIndex)
                 {
                     firstIndex = indexNewComponents;
                 }
@@ -168,6 +217,9 @@ namespace CustomEcs
             }
             return false;
         }
+
+        
+
     }
 
 }

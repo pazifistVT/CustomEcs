@@ -96,7 +96,7 @@ namespace CustomEcs
     public class Filter<T> : BaseFilter where T : struct
     {
         static Filter<T> obj;
-        private static readonly int HashType = Component<T>.GetInstanceComponent().HashType;
+        private static int HashType = Component<T>.GetInstanceComponent().HashType;
 
         public static Filter<T> GetFilter()
         {
@@ -106,6 +106,7 @@ namespace CustomEcs
                 {
                     collectionEnumenator = new CollectionEnumenator()
                 };
+                HashType = Component<T>.GetInstanceComponent().HashType;
             }
             return obj;
         }
@@ -146,7 +147,6 @@ namespace CustomEcs
 
     public class Filter<T, U> : BaseFilter where T : struct where U : struct
     {
-        private static readonly int HashTypeT = Component<T>.GetInstanceComponent().HashType;
         private static readonly int HashTypeU = Component<U>.GetInstanceComponent().HashType;
         private bool typeU;
 

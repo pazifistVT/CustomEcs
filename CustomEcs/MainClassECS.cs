@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Text.Json;
 namespace CustomEcs
 {
     public class MainClassECS
@@ -11,7 +11,61 @@ namespace CustomEcs
         internal int lastFreeIndex;
         internal Entity[] entities;
         internal List<SystemECS> systems;
-        readonly ComponentContainer container;
+        private ComponentContainer container;
+
+        internal class MainClassJson
+        {
+            public string container;
+            public List<string> entities;
+            public int firstFreeIndex;
+            public int lastFreeIndex;
+        }
+
+        internal string Serialize()
+        {
+            List<string> entitiesJson = new List<string>();
+            foreach (Entity item in entities)
+            {
+                entitiesJson.Add(item.Serialize());
+            }
+            MainClassJson entity = new MainClassJson()
+            {
+                firstFreeIndex = firstFreeIndex,
+                lastFreeIndex = lastFreeIndex,
+                container = container.Serialize(),
+                entities = entitiesJson
+            };
+            string s = JsonSerializer.Serialize<MainClassJson>(entity);
+            return s;
+        }
+
+        internal void Deserialize(string s)
+        {
+            MainClassJson entity = new MainClassJson();
+            try
+            {
+                entity = JsonSerializer.Deserialize<MainClassJson>(s);
+            }
+            catch (Exception e)
+            {
+
+            }
+            List<Entity> entitiesFromJson = new List<Entity>();
+            foreach (string item in entity.entities)
+            {
+                Entity e = new Entity(0, this);
+                e.Deserialize(item);
+                entitiesFromJson.Add(e);
+            }
+
+
+            firstFreeIndex = entity.firstFreeIndex;
+            lastFreeIndex = entity.lastFreeIndex;
+
+            container = ComponentContainer.GetInstance(this);
+            container.Deserialize(entity.container);
+            entities = entitiesFromJson.ToArray();
+        }
 
         public MainClassECS()
         {

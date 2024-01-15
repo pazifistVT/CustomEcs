@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.Serialization.Formatters;
+using System.Text.Json;
 
 namespace CustomEcs
 {
@@ -20,6 +21,9 @@ namespace CustomEcs
                 firstFreeIndex = index;
             }
         }
+
+        internal abstract void Deserialize(SerializeListComponents listComponents);
+        internal abstract string Serialize();
     }
 
     internal class Component<T> : BaseComponent where T : struct
@@ -28,7 +32,55 @@ namespace CustomEcs
         static Component<T> obj;
 
         T[] components;//контейнер структур хранящих данные
-        
+
+        private class ComponentJson<T>
+        {
+            public T[] components;
+            public bool[] aliveComponents;
+            public int[] indexesEntity;
+            public int firstFreeIndex;
+            public int lastFreeIndex;
+        }
+
+        internal override string Serialize()
+        {
+            ComponentJson<T> entity = new ComponentJson<T>()
+            {
+                components = components,
+                aliveComponents = aliveComponents,
+                indexesEntity = indexesEntity,
+                firstFreeIndex = firstFreeIndex,
+                lastFreeIndex = lastFreeIndex
+            };
+            string s = JsonSerializer.Serialize<ComponentJson<T>>(entity);
+            return s;
+        }
+
+        internal override void Deserialize(SerializeListComponents listComponents)
+        {
+            foreach (SerializeComponent item in listComponents.list)
+            {
+                if(item.componentType == HashType)
+                {
+                    ComponentJson<T> entity = new ComponentJson<T>();
+                    try
+                    {
+                        entity = JsonSerializer.Deserialize<ComponentJson<T>>(item.value);
+                    }
+                    catch (Exception e)
+                    {
+
+                    }
+                    components = entity.components;
+                    aliveComponents = entity.aliveComponents;
+                    indexesEntity = entity.indexesEntity;
+                    firstFreeIndex = entity.firstFreeIndex;
+                    lastFreeIndex = entity.lastFreeIndex;
+                }
+            }
+            
+        }
+
         public static Component<T> GetInstanceComponent()
         {
             if (obj == null)
