@@ -21,7 +21,7 @@ namespace CustomEcs
             public int lastFreeIndex;
         }
 
-        internal string Serialize()
+        public string Serialize()
         {
             List<string> entitiesJson = new List<string>();
             foreach (Entity item in entities)
@@ -39,7 +39,7 @@ namespace CustomEcs
             return s;
         }
 
-        internal void Deserialize(string s)
+        public void Deserialize(string s)
         {
             MainClassJson entity = new MainClassJson();
             try
