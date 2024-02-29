@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.Serialization.Formatters;
 using System.Text.Json;
 
 namespace CustomEcs
