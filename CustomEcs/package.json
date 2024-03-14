@@ -1,0 +1,15 @@
+{
+    "name": "com.pazifistvt.customecs",
+    "author": "pazifistVT",
+    "displayName": "CustomECS",
+    "description": "Фреймворк для использования ECS паттерна.",
+    "version": "1.0.0",
+    "keywords": [
+        "ecs"
+    ],
+    "dependencies": {},
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/pazifistVT/CustomEcs.git"
+    }
+}

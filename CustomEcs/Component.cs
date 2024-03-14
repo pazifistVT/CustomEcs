@@ -66,7 +66,7 @@ namespace CustomEcs
                     {
                         entity = JsonSerializer.Deserialize<ComponentJson<T>>(item.value);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
 
                     }
